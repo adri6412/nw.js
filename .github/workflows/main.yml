@@ -20,7 +20,7 @@ jobs:
     - name: Set up build environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y python gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ninja-build
+        sudo apt-get install -y python3 gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ninja-build
 
     - name: Generate build files
       run: |
