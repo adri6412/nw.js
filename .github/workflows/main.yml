@@ -2,9 +2,9 @@ name: Build nw.js for ARM64
 
 on:
   push:
-    branches: [ main, master, nw92 ]
+    branches: [ nw92 ]
   pull_request:
-    branches: [ main, master, nw92 ]
+    branches: [ nw92 ]
   workflow_dispatch:
 
 jobs:
@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: '14'
 
@@ -38,7 +38,7 @@ jobs:
         ninja -C out/Release
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: nwjs-arm64
         path: out/Release/nw
