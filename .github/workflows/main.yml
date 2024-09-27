@@ -12,54 +12,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install depot_tools
-      run: |
-        git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-        echo "$HOME/depot_tools" >> $GITHUB_PATH
-        echo "PATH=$PATH:$HOME/depot_tools" >> $GITHUB_ENV
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
 
     - name: Set up build environment
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3 gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-
-    - name: Get nw.js code
-      run: |
-        mkdir -p $HOME/nwjs
-        cd $HOME/nwjs
-        $HOME/depot_tools/gclient config --name=src https://github.com/nwjs/chromium.src.git@origin/nw92
-        echo 'custom_deps = {
-          "src/third_party/WebKit/LayoutTests": None,
-          "src/chrome_frame/tools/test/reference_build/chrome": None,
-          "src/chrome_frame/tools/test/reference_build/chrome_win": None,
-          "src/chrome/tools/test/reference_build/chrome": None,
-          "src/chrome/tools/test/reference_build/chrome_linux": None,
-          "src/chrome/tools/test/reference_build/chrome_mac": None,
-          "src/chrome/tools/test/reference_build/chrome_win": None,
-        }' >> .gclient
-        $HOME/depot_tools/gclient sync --with_branch_heads
-
-    - name: Clone additional repositories
-      run: |
-        cd $HOME/nwjs/src
-        git clone https://github.com/nwjs/nw.js content/nw
-        git clone https://github.com/nwjs/node third_party/node-nw
-        git clone https://github.com/nwjs/v8 v8
+        sudo apt-get install -y python gcc-aarch64-linux-gnu g++-aarch64-linux-gnu ninja-build
 
     - name: Generate build files
       run: |
-        cd $HOME/nwjs/src
-        $HOME/depot_tools/gn gen out/nw --args='is_debug=false is_component_ffmpeg=true target_cpu="arm64"'
-        GYP_CHROMIUM_NO_ACTION=0 ./build/gyp_chromium -I third_party/node-nw/common.gypi -D building_nw=1 -D clang=1 third_party/node-nw/node.gyp
+        gn gen out/nw --args='is_debug=false is_component_ffmpeg=true target_cpu="arm64"'
 
     - name: Build nw.js
       run: |
-        cd $HOME/nwjs/src
         ninja -C out/nw nwjs
 
     - name: Build Node
       run: |
-        cd $HOME/nwjs/src
+        ./build/gyp_chromium -I third_party/node-nw/common.gypi -D building_nw=1 -D clang=1 third_party/node-nw/node.gyp
         ninja -C out/nw node
         ninja -C out/nw copy_node
 
@@ -67,4 +40,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: nwjs-arm64
-        path: $HOME/nwjs/src/out/nw/nwjs
+        path: out/nw/nwjs
