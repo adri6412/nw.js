@@ -1,0 +1,43 @@
+name: Build nw.js for ARM64
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+    - name: Configure for ARM64
+      run: |
+        export CC=aarch64-linux-gnu-gcc
+        export CXX=aarch64-linux-gnu-g++
+        export AR=aarch64-linux-gnu-ar
+        export LINK=aarch64-linux-gnu-g++
+        export GYP_DEFINES="target_arch=arm64"
+
+    - name: Build nw.js
+      run: |
+        ./build/gyp_nw
+        ninja -C out/Release
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: nwjs-arm64
+        path: out/Release/nw
